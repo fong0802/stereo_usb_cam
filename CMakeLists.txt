@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(usb_cam)
+project(stereo_usb_cam)
 
 # Default to C++17
 if(NOT CMAKE_CXX_STANDARD)
