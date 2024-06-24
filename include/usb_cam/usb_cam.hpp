@@ -141,6 +141,7 @@ typedef struct
   size_t number_of_pixels;
   size_t bytes_per_line;
   size_t size_in_bytes;
+  size_t current_mjpeg_size_in_bytes;
   v4l2_format v4l2_fmt;
   struct timespec stamp;
 
@@ -192,7 +193,7 @@ public:
 
   /// @brief Overload of get_image to allow users to pass
   /// in an image pointer to fill in
-  void get_image(char * destination);
+  size_t get_image(char * destination);
 
   std::vector<capture_format_t> get_supported_formats();
 

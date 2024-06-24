@@ -82,7 +82,7 @@ void UsbCam::process_image(const char * src, char * & dest, const int & bytes_us
   // TODO(flynneva): could we skip the copy here somehow?
   // If no conversion required, just copy the image from V4L2 buffer
   if (m_image.pixel_format->requires_conversion() == false) {
-    memcpy(dest, src, m_image.size_in_bytes);
+    memcpy(dest, src, bytes_used);
   } else {
     m_image.pixel_format->convert(src, dest, bytes_used);
   }
@@ -137,7 +137,10 @@ void UsbCam::read_frame()
       assert(buf.index < m_number_of_buffers);
       process_image(m_buffers[buf.index].start, m_image.data, buf.bytesused);
 
-      /// Requeue buffer so it can be reused
+      // Update current mjpeg raw data size
+      m_image.current_mjpeg_size_in_bytes = buf.bytesused;
+
+      // Requeue buffer so it can be reused
       if (-1 == usb_cam::utils::xioctl(m_fd, static_cast<int>(VIDIOC_QBUF), &buf)) {
         throw std::runtime_error("Unable to exchange buffer with the driver");
       }
@@ -555,7 +558,7 @@ char * UsbCam::get_image()
 
 /// @brief Overload get_image so users can pass in an image pointer to fill
 /// @param destination destination to fill in with image
-void UsbCam::get_image(char * destination)
+size_t UsbCam::get_image(char * destination)
 {
   if ((m_image.width == 0) || (m_image.height == 0)) {
     return;
@@ -564,6 +567,9 @@ void UsbCam::get_image(char * destination)
   m_image.data = destination;
   // grab the image
   grab_image();
+
+  // pass current mjpeg raw data size
+  return m_image.current_mjpeg_size_in_bytes;
 }
 
 std::vector<capture_format_t> UsbCam::get_supported_formats()
