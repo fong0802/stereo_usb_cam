@@ -561,7 +561,7 @@ char * UsbCam::get_image()
 size_t UsbCam::get_image(char * destination)
 {
   if ((m_image.width == 0) || (m_image.height == 0)) {
-    return;
+    return 0;
   }
   // Set the destination pointer to be filled
   m_image.data = destination;
