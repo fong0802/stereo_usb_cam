@@ -172,6 +172,11 @@ void UsbCamNode::init()
   // if pixel format is equal to 'mjpeg', i.e. raw mjpeg stream, initialize compressed image message
   // and publisher
   if (m_parameters.pixel_format_name == "raw_mjpeg") {
+    
+    // disable m_image_publisher that is using image tranport
+    m_image_publisher.reset();
+
+    // enable m_compressed_image_publisher
     m_compressed_img_msg.reset(new sensor_msgs::msg::CompressedImage());
     m_compressed_img_msg->header.frame_id = m_parameters.frame_id;
     m_compressed_image_publisher =
