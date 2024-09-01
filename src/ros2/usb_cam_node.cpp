@@ -46,7 +46,8 @@ UsbCamNode::UsbCamNode(const rclcpp::NodeOptions & node_options)
   m_compressed_img_msg(nullptr),
   m_image_publisher(std::make_shared<image_transport::CameraPublisher>(
       image_transport::create_camera_publisher(this, BASE_TOPIC_NAME,
-      rclcpp::QoS {100}.get_rmw_qos_profile()))),
+      rclcpp::SensorDataQoS().get_rmw_qos_profile()))),
+      // rclcpp::QoS {100}.get_rmw_qos_profile()))),
   m_compressed_image_publisher(nullptr),
   m_compressed_cam_info_publisher(nullptr),
   m_parameters(),
@@ -181,10 +182,12 @@ void UsbCamNode::init()
     m_compressed_img_msg->header.frame_id = m_parameters.frame_id;
     m_compressed_image_publisher =
       this->create_publisher<sensor_msgs::msg::CompressedImage>(
-      std::string(BASE_TOPIC_NAME) + "/compressed", rclcpp::QoS(100));
+        std::string(BASE_TOPIC_NAME) + "/compressed", rclcpp::SensorDataQoS());
+      // std::string(BASE_TOPIC_NAME) + "/compressed", rclcpp::QoS(100));
     m_compressed_cam_info_publisher =
       this->create_publisher<sensor_msgs::msg::CameraInfo>(
-      "camera_info", rclcpp::QoS(100));
+      "camera_info", rclcpp::SensorDataQoS());
+      // "camera_info", rclcpp::QoS(100));
   }
 
   m_image_msg->header.frame_id = m_parameters.frame_id;
@@ -321,25 +324,25 @@ void UsbCamNode::set_v4l2_params()
 
   // check auto white balance
   if (m_parameters.auto_white_balance) {
-    m_camera->set_v4l_parameter("white_balance_temperature_auto", 1);
-    RCLCPP_INFO(this->get_logger(), "Setting 'white_balance_temperature_auto' to %d", 1);
+    m_camera->set_v4l_parameter("white_balance_automatic", 1);
+    RCLCPP_INFO(this->get_logger(), "Setting 'white_balance_automatic' to %d", 1);
   } else {
     RCLCPP_INFO(this->get_logger(), "Setting 'white_balance' to %d", m_parameters.white_balance);
-    m_camera->set_v4l_parameter("white_balance_temperature_auto", 0);
+    m_camera->set_v4l_parameter("white_balance_automatic", 0);
     m_camera->set_v4l_parameter("white_balance_temperature", m_parameters.white_balance);
   }
 
   // check auto exposure
   if (!m_parameters.autoexposure) {
-    RCLCPP_INFO(this->get_logger(), "Setting 'exposure_auto' to %d", 1);
+    RCLCPP_INFO(this->get_logger(), "Setting 'auto_exposure' to %d", 1);
     RCLCPP_INFO(this->get_logger(), "Setting 'exposure' to %d", m_parameters.exposure);
     // turn down exposure control (from max of 3)
-    m_camera->set_v4l_parameter("exposure_auto", 1);
+    m_camera->set_v4l_parameter("auto_exposure", 1);
     // change the exposure level
-    m_camera->set_v4l_parameter("exposure_absolute", m_parameters.exposure);
+    m_camera->set_v4l_parameter("exposure_time_absolute", m_parameters.exposure);
   } else {
-    RCLCPP_INFO(this->get_logger(), "Setting 'exposure_auto' to %d", 3);
-    m_camera->set_v4l_parameter("exposure_auto", 3);
+    RCLCPP_INFO(this->get_logger(), "Setting 'auto_exposure' to %d", 3);
+    m_camera->set_v4l_parameter("auto_exposure", 3);
   }
 
   // check auto focus
